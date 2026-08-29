@@ -31,11 +31,13 @@ particular, **¿con que frecuencia hay remontadas?**
 ## 3. Alcance
 
 **Entra:**
+
 - Liga inicial: Premier League 2024-25 (`2024-25/en.1.json`).
 - Variables: date, time, team1, team2, score.ht, score.ft, round.
 - Analisis descriptivo + regresion lineal simple + matriz de confusion.
 
 **No entra (fuera de alcance):**
+
 - Modelos predictivos avanzados (Poisson bivariado, clasificadores).
 - xG, posesion, tiros, tarjetas, alineaciones (no estan en el dataset).
 - Comparacion entre ligas (punto 6 del archivo de ideas).
@@ -43,14 +45,14 @@ particular, **¿con que frecuencia hay remontadas?**
 
 ## 4. Dataset
 
-| Campo | Detalle |
-|---|---|
-| Nombre | openfootball/football.json |
-| Fuente | https://github.com/openfootball/football.json |
-| Licencia | Dominio publico |
-| Formato | JSON, un archivo por temporada + liga |
-| Cobertura | Premier League, Bundesliga, La Liga, Serie A, Ligue 1 y mas; 2010-11 a 2025-26 |
-| Archivo inicial | `2024-25/en.1.json` — 380 partidos, 14 campos |
+| Campo           | Detalle                                                                        |
+| --------------- | ------------------------------------------------------------------------------ |
+| Nombre          | openfootball/football.json                                                     |
+| Fuente          | https://github.com/openfootball/football.json                                  |
+| Licencia        | Dominio publico                                                                |
+| Formato         | JSON, un archivo por temporada + liga                                          |
+| Cobertura       | Premier League, Bundesliga, La Liga, Serie A, Ligue 1 y mas; 2010-11 a 2025-26 |
+| Archivo inicial | `2024-25/en.1.json` — 380 partidos, 14 campos                                  |
 
 **Campos por partido:** `date`, `time`, `team1` (local), `team2` (visitante),
 `score.ht` [g1, g2] (medio tiempo), `score.ft` [g1, g2] (tiempo completo),
@@ -109,16 +111,51 @@ Abrir `notebooks/01_carga_parseo_depuracion.ipynb` y ejecutar de arriba a abajo.
 
 Ver `ESTADO_TRABAJO.md` para el detalle de lo hecho y lo pendiente.
 
-| Parte | Responsable | Estado |
-|---|---|---|
-| Estructura del proyecto | [yo] | Hecho |
-| requirements.txt, .gitignore | [yo] | Hecho |
-| README inicial (problema/objetivos/alcance) | [yo] | Hecho |
-| src/data_loader.py | [yo] | Hecho |
-| src/data_clean.py | [yo] | Hecho |
-| Notebook 01 (carga/parseo/depuracion) | [yo] | Hecho |
-| Scatter ht vs ft | [yo] | Hecho |
-| Regresion lineal sobre el scatter | [companero] | Pendiente |
-| % remontadas por equipo | [companero] | Pendiente |
-| Matriz de confusion ht -> ft (heatmap) | [companero] | Pendiente |
-| README final + Git Flow | [companero] | Pendiente |
+| Parte                                       | Responsable | Estado    |
+| ------------------------------------------- | ----------- | --------- |
+| Estructura del proyecto                     | [yo]        | Hecho     |
+| requirements.txt, .gitignore                | [yo]        | Hecho     |
+| README inicial (problema/objetivos/alcance) | [yo]        | Hecho     |
+| src/data_loader.py                          | [yo]        | Hecho     |
+| src/data_clean.py                           | [yo]        | Hecho     |
+| Notebook 01 (carga/parseo/depuracion)       | [yo]        | Hecho     |
+| Scatter ht vs ft                            | [yo]        | Hecho     |
+| Regresion lineal sobre el scatter           | [companero] | Pendiente |
+| % remontadas por equipo                     | [companero] | Pendiente |
+| Matriz de confusion ht -> ft (heatmap)      | [companero] | Pendiente |
+| README final + Git Flow                     | [companero] | Pendiente |
+
+## 10. Resultados e interpretación
+
+- Partidos cargados: **380**. 0 duplicados.
+- Partidos sin HT registrado: **16** (4.21%) — se conservan pero se excluyen del scatter y del análisis de remontadas.
+- Partidos con HT registrado: **364**.
+- Remontadas (equipo perdía en HT y ganó en FT): **29** = **7.97%** de los partidos con HT.
+- Correlación Pearson entre `ht_total` y `ft_total`: **r = 0.712** (p < 0.001). Interpretación: el HT aporta señal positiva hacia el FT, pero no determina el resultado final (existen cambios y remontadas).
+
+Archivos de salida generados en `data/processed/`:
+
+- `premier_2024_25_limpio.csv` — dataset limpio y reproducible (regenerable desde el notebook 01).
+- `scatter_ht_vs_ft.png` — scatter HT vs FT (ya incluido).
+- `regression_ht_vs_ft.png`, `regression_summary.txt` — regresión OLS HT -> FT (script `src/analysis.py`).
+- `remontadas_por_equipo.png`, `remontadas_por_equipo.csv` — % remontadas por equipo.
+- `matriz_confusion_ht_ft.png`, `matriz_confusion_ht_ft.csv` — heatmap y tabla 3x3 HT -> FT.
+
+## 11. Git Flow recomendada
+
+Ramas propuestas para colaboración:
+
+- `main` — rama estable (release-ready).
+- `develop` — integración de features del sprint.
+- `feature/regresion` — código y notebook de la regresión HT -> FT.
+- `feature/remontadas` — cálculo y visualización del % de remontadas por equipo.
+- `feature/matriz-confusion` — matriz de confusión y heatmap.
+
+Flujo de trabajo breve:
+
+1. Crear la rama `feature/...` desde `develop`.
+2. Hacer commits temáticos y push a la rama remota.
+3. Abrir PR hacia `develop` con descripción y artefactos (`png`, `csv`).
+4. Tras revisión, merge a `develop` y luego a `main` mediante release PR.
+
+Nota: No subir los datos crudos al repo; mantener la ruta local documentada en `data/raw/README.md` y usar `.gitignore` para archivos pesados.
