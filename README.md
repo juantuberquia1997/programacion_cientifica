@@ -28,21 +28,6 @@ particular, **¿con que frecuencia hay remontadas?**
    por equipo.
 4. Construir una matriz de confusion del resultado ht -> ft como heatmap.
 
-## 3. Alcance
-
-**Entra:**
-
-- Liga inicial: Premier League 2024-25 (`2024-25/en.1.json`).
-- Variables: date, time, team1, team2, score.ht, score.ft, round.
-- Analisis descriptivo + regresion lineal simple + matriz de confusion.
-
-**No entra (fuera de alcance):**
-
-- Modelos predictivos avanzados (Poisson bivariado, clasificadores).
-- xG, posesion, tiros, tarjetas, alineaciones (no estan en el dataset).
-- Comparacion entre ligas (punto 6 del archivo de ideas).
-- Series temporales multi-año (punto 7).
-
 ## 4. Dataset
 
 | Campo           | Detalle                                                                        |
@@ -75,87 +60,42 @@ particular, **¿con que frecuencia hay remontadas?**
 - No hay metricas avanzadas (xG, posesion). Todos los analisis se basan en
   goles y resultados.
 
-## 7. Estructura del proyecto
-
-```
-.
-├── README.md
-├── requirements.txt
-├── ESTADO_TRABAJO.md          # estado del trabajo y handoff 50/50
-├── data/
-│   ├── raw/                   # dataset original (ver data/raw/README.md)
-│   └── processed/             # salidas de parseo/depuracion
-├── notebooks/
-│   ├── 01_carga_parseo_depuracion.ipynb
-│   └── 02_analisis_dinamica_ht_vs_ft.ipynb
-└── src/
-    ├── __init__.py
-    ├── data_loader.py         # lectura JSON -> DataFrame
-    └── data_clean.py          # parseo, depuracion, auditoria
-```
 
 ## 8. Como ejecutar
 
+### 8.1 Instalar dependencias
+
 ```bash
 pip install -r requirements.txt
-jupyter notebook
 ```
 
-Abrir `notebooks/01_carga_parseo_depuracion.ipynb` y ejecutar de arriba a abajo.
+Incluye: pandas, numpy, matplotlib, seaborn, scipy, statsmodels, jupyterlab, plotly.
+
+### 8.2 Levantar JupyterLab (graficos interactivos)
+
+```bash
+jupyter lab
+```
+
+Abrir cualquiera de los notebooks y ejecutar de arriba a abajo:
+
+| Notebook | Contenido |
+| --- | --- |
+| `01_carga_parseo_depuracion.ipynb` | Carga, parseo y depuracion del JSON -> CSV limpio |
+| `02_analisis_dinamica_ht_vs_ft.ipynb` | Scatter, remontadas y matriz de confusion (matplotlib) |
+| `03_graficos_interactivos.ipynb` | Scatter, remontadas, heatmap y box plot interactivos (Plotly) |
 
 > **Ruta del dataset:** el codigo apunta a
 > `C:\Users\1234\Documents\ITM\4 semestre\programacion_cientifica\football.json`.
-> Si se clona en otra maquina, ajustar `DATA_DIR` en la primera celda del notebook.
+> Si se clona en otra maquina, ajustar `DATA_DIR` en la primera celda del notebook 01.
 
-## 9. Division del trabajo (50/50)
+### 8.3 Alternativa CLI (sin notebooks)
 
-Ver `ESTADO_TRABAJO.md` para el detalle de lo hecho y lo pendiente.
+Si solo se quieren regenerar los analisis a partir del CSV limpio:
 
-| Parte                                       | Responsable | Estado    |
-| ------------------------------------------- | ----------- | --------- |
-| Estructura del proyecto                     | [yo]        | Hecho     |
-| requirements.txt, .gitignore                | [yo]        | Hecho     |
-| README inicial (problema/objetivos/alcance) | [yo]        | Hecho     |
-| src/data_loader.py                          | [yo]        | Hecho     |
-| src/data_clean.py                           | [yo]        | Hecho     |
-| Notebook 01 (carga/parseo/depuracion)       | [yo]        | Hecho     |
-| Scatter ht vs ft                            | [yo]        | Hecho     |
-| Regresion lineal sobre el scatter           | [companero] | Pendiente |
-| % remontadas por equipo                     | [companero] | Pendiente |
-| Matriz de confusion ht -> ft (heatmap)      | [companero] | Pendiente |
-| README final + Git Flow                     | [companero] | Pendiente |
+```bash
+python -m src.analysis
+```
 
-## 10. Resultados e interpretación
-
-- Partidos cargados: **380**. 0 duplicados.
-- Partidos sin HT registrado: **16** (4.21%) — se conservan pero se excluyen del scatter y del análisis de remontadas.
-- Partidos con HT registrado: **364**.
-- Remontadas (equipo perdía en HT y ganó en FT): **29** = **7.97%** de los partidos con HT.
-- Correlación Pearson entre `ht_total` y `ft_total`: **r = 0.712** (p < 0.001). Interpretación: el HT aporta señal positiva hacia el FT, pero no determina el resultado final (existen cambios y remontadas).
-
-Archivos de salida generados en `data/processed/`:
-
-- `premier_2024_25_limpio.csv` — dataset limpio y reproducible (regenerable desde el notebook 01).
-- `scatter_ht_vs_ft.png` — scatter HT vs FT (ya incluido).
-- `regression_ht_vs_ft.png`, `regression_summary.txt` — regresión OLS HT -> FT (script `src/analysis.py`).
-- `remontadas_por_equipo.png`, `remontadas_por_equipo.csv` — % remontadas por equipo.
-- `matriz_confusion_ht_ft.png`, `matriz_confusion_ht_ft.csv` — heatmap y tabla 3x3 HT -> FT.
-
-## 11. Git Flow recomendada
-
-Ramas propuestas para colaboración:
-
-- `main` — rama estable (release-ready).
-- `develop` — integración de features del sprint.
-- `feature/regresion` — código y notebook de la regresión HT -> FT.
-- `feature/remontadas` — cálculo y visualización del % de remontadas por equipo.
-- `feature/matriz-confusion` — matriz de confusión y heatmap.
-
-Flujo de trabajo breve:
-
-1. Crear la rama `feature/...` desde `develop`.
-2. Hacer commits temáticos y push a la rama remota.
-3. Abrir PR hacia `develop` con descripción y artefactos (`png`, `csv`).
-4. Tras revisión, merge a `develop` y luego a `main` mediante release PR.
-
-Nota: No subir los datos crudos al repo; mantener la ruta local documentada en `data/raw/README.md` y usar `.gitignore` para archivos pesados.
+Genera en `data/processed/`: regresion OLS, % remontadas por equipo y matriz de
+confusion (PNG + CSV + resumen de texto).

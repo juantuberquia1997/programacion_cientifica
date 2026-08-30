@@ -9,6 +9,8 @@ env/
 # Salidas de datos procesados (se regeneran con el codigo)
 data/processed/*.csv
 data/processed/*.parquet
+data/processed/*.png
+data/processed/*.txt
 !data/processed/.gitkeep
 
 # OS
