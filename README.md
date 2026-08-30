@@ -1,11 +1,4 @@
-# Dinamica del partido (ht vs ft) — Taller de Programacion Cientifica
-
-**Curso:** Programacion Cientifica — ITM, 4 semestre
-**Evaluacion:** 1 (20 %)
-**Equipo:** [completar nombres + correo]
-**Dataset:** `openfootball/football.json` (dominio publico)
-
----
+# Dinamica del partido (ht vs ft) — Programacion Cientifica
 
 ## 1. Definicion del problema
 
