@@ -62,7 +62,7 @@ particular, **¿con que frecuencia hay remontadas?**
 pip install -r requirements.txt
 ```
 
-Incluye: pandas, numpy, matplotlib, seaborn, scipy, statsmodels, jupyterlab, plotly.
+Incluye: pandas, numpy, matplotlib, seaborn, scipy, statsmodels, scikit-learn, jupyterlab, plotly.
 
 ### 8.2 Levantar JupyterLab (graficos interactivos)
 
@@ -77,6 +77,7 @@ Abrir cualquiera de los notebooks y ejecutar de arriba a abajo:
 | `01_carga_parseo_depuracion.ipynb` | Carga, parseo y depuracion del JSON -> CSV limpio |
 | `02_analisis_dinamica_ht_vs_ft.ipynb` | Scatter, remontadas y matriz de confusion (matplotlib) |
 | `03_graficos_interactivos.ipynb` | Scatter, remontadas, heatmap y box plot interactivos (Plotly) |
+| `04_modelo_prediccion.ipynb` | Modelo de prediccion `res_ft` a partir del marcador ht (regresion logistica) |
 
 > **Ruta del dataset:** el codigo apunta a
 > `C:\Users\1234\Documents\ITM\4 semestre\programacion_cientifica\football.json`.
