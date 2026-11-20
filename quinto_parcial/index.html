@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quinto parcial — ¿El medio tiempo predice el tiempo completo?</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --ink: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent2: #f59e0b;
+    --line: #334155;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+    background: #0b1220;
+  }
+  header .title {
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  header .counter {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  #stage {
+    flex: 1;
+    position: relative;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 28px 48px;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .kicker {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    font-weight: 700;
+  }
+  h1 { font-size: 44px; margin: 0; line-height: 1.1; }
+  h2 { font-size: 32px; margin: 0; line-height: 1.15; }
+  h3 { font-size: 20px; margin: 0; color: var(--accent); }
+  p, li { font-size: 18px; line-height: 1.55; color: var(--ink); margin: 0; }
+  .muted { color: var(--muted); }
+  .lead { font-size: 22px; }
+  ul { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+  code {
+    background: #0b1220;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 15px;
+    color: #7dd3fc;
+  }
+  pre {
+    background: #0b1220;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 14px;
+    color: #e2e8f0;
+    line-height: 1.5;
+    margin: 0;
+    overflow-x: auto;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  .figure-col { text-align: center; }
+  .figure-col img {
+    max-width: 100%;
+    max-height: 62vh;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.45);
+    background: #fff;
+  }
+  .figure-col .caption {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .reading {
+    border-left: 3px solid var(--accent);
+    background: #0b1220;
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .reading .num {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent2);
+  }
+  .reading .label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .reading.ok { border-left-color: #4ade80; }
+  .reading.no { border-left-color: #f59e0b; }
+  .reading.ok .label { color: #4ade80; }
+  .reading.no .label { color: #f59e0b; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 16px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    text-align: left;
+  }
+  th { background: #0b1220; color: var(--accent); }
+  td.metric { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .win { color: #4ade80; font-weight: 700; }
+  .bad { color: #f87171; font-weight: 700; }
+  .cols { display: flex; gap: 24px; flex-wrap: wrap; }
+  .cols > div { flex: 1; min-width: 260px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .card h3 { margin-bottom: 10px; }
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    background: #0b1220;
+  }
+  .nav-btn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 18px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .hint { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="title">Programación Científica · Quinto parcial · 2026-2</div>
+  <div class="counter"><span id="cur">1</span> / <span id="total">12</span></div>
+</header>
+
+<div id="stage">
+
+  <!-- 1. Portada -->
+  <section class="slide active">
+    <div class="kicker">Quinto parcial</div>
+    <h1>¿El medio tiempo predice<br>el tiempo completo?</h1>
+    <p class="lead muted">Reparación, gráficos y modelo de predicción sobre la Premier League 2024/25</p>
+    <p class="muted">Dataset: openfootball / football.json · 380 partidos</p>
+  </section>
+
+  <!-- 2. Pregunta del dataset -->
+  <section class="slide">
+    <div class="kicker">Pregunta</div>
+    <h2>El partido se mueve: no siempre gana quien va adelante al descanso</h2>
+    <ul>
+      <li>Fuente: <code>openfootball/football.json</code> — dominio público.</li>
+      <li>Archivo: <code>2024-25/en.1.json</code> — Premier League 2024/25, <strong>380 partidos</strong>.</li>
+      <li>Campos: <code>date</code>, <code>team1</code>, <code>team2</code>, <code>score.ht</code>, <code>score.ft</code> (marcadores), <code>round</code>.</li>
+    </ul>
+    <div class="reading ok">
+      <span class="label">Pregunta central</span>
+      <p class="lead">¿El marcador al descanso (ht) predice el resultado final (ft)?</p>
+      <p class="muted">Y si un equipo <strong>empieza perdiendo</strong>: ¿qué tan probable es que remonte?</p>
+    </div>
+  </section>
+
+  <!-- 3. Reparación: lectura y parseo -->
+  <section class="slide">
+    <div class="kicker">Reparación · 1</div>
+    <h2>Cómo entró y cómo se parseó</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Lectura (I/O)</h3>
+        <ul>
+          <li>Formato <strong>JSON</strong> (no CSV, no hay separador) · encoding <strong>UTF-8</strong>.</li>
+          <li>El marcador viene anidado:</li>
+        </ul>
+        <pre>"score": {
+  "ht": [1, 0],
+  "ft": [2, 1]
+}</pre>
+        <p class="muted" style="margin-top:8px;">La lista <code>[g1, g2]</code> = <code>[goles local, goles visitante]</code> se aplana a <code>ht_g1, ht_g2, ft_g1, ft_g2</code>.</p>
+        <ul style="margin-top:8px;">
+          <li>El <code>null</code> del JSON se trata como faltante: queda <code>NaN</code> real, <strong>sin inventar valores</strong>.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Parseo (tipo)</h3>
+        <ul>
+          <li><code>date</code> → <code>datetime</code> con formato <code>YYYY-MM-DD</code>. Si una fecha no se interpreta, queda <code>NaT</code> (falta fecha).</li>
+          <li>Goles → se convierten a <strong>entero</strong> (0, 1, 2…). El tipo <code>Int64</code> nullable admite faltantes; con <code>errors="coerce"</code>, lo que no es número (ej. <code>"x"</code>) se vuelve <code>NaN</code> en vez de romper.</li>
+          <li>Equipos / <code>round</code> → texto con <code>strip()</code>: quita espacios laterales para no crear duplicados falsos (ej. <code>"Arsenal "</code> vs <code>"Arsenal"</code>).</li>
+        </ul>
+        <div class="reading no" style="margin-top:12px;">
+          <span class="label">Faltantes del parseo</span>
+          <p>Aquí no aparecen faltantes nuevos: las fechas son válidas y los <code>NaN</code> de goles vienen del <code>null</code> del JSON, no del parseo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Reparación: auditoría y decisión -->
+  <section class="slide">
+    <div class="kicker">Reparación · 2</div>
+    <h2>Auditoría y decisión por variable</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Se elimina</h3>
+        <ul>
+          <li><code>ft</code> null → partido <strong>sin resultado final</strong>.</li>
+          <li>Imposibles: goles negativos, <code>ft &lt; ht</code>, <code>team1 == team2</code>.</li>
+          <li>Duplicados exactos.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Se conserva</h3>
+        <ul>
+          <li><code>ht</code> null (~16 partidos): el <code>ft</code> sí sirve.</li>
+          <li>Se excluyen solo del scatter, remontadas y modelo.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="reading no">
+      <span class="label">Decisión clave: no se imputa</span>
+      <p>Imputar = rellenar el faltante con un valor (media, mediana o moda). No se hace: el faltante es <strong>"no registrado"</strong>, no un valor perdible; rellenarlo aplastaría la desviación estándar.</p>
+    </div>
+    <p class="muted">Resultado: 380 con resultado final · 364 con ht registrado.</p>
+  </section>
+
+  <!-- 5. Gráfico 1 -->
+  <section class="slide">
+    <div class="kicker">Gráfico 1</div>
+    <div class="grid">
+      <div class="figure-col">
+        <img src="regression_ht_vs_ft.png" alt="Scatter goles ht vs ft con regresión lineal">
+        <div class="caption">Scatter goles ht vs ft + recta de regresión OLS</div>
+      </div>
+      <div>
+        <h2>¿El medio tiempo predice el tiempo completo?</h2>
+        <div class="reading ok">
+          <span class="label">Lo que muestra</span>
+          <p class="num">r = 0.71 · R² = 0.51</p>
+          <p>Cada gol extra al descanso → <strong>+0.93 goles</strong> al final, en promedio.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Gráfico 2 -->
+  <section class="slide">
+    <div class="kicker">Gráfico 2</div>
+    <div class="grid">
+      <div class="figure-col">
+        <img src="matriz_confusion_ht_ft.png" alt="Matriz de confusión resultado ht vs ft">
+        <div class="caption">Heatmap res_ht → res_ft (proporción por fila)</div>
+      </div>
+      <div>
+        <h2>¿Con qué frecuencia cambia el resultado del ht al ft?</h2>
+        <div class="reading ok">
+          <span class="label">Lo que muestra</span>
+          <p class="num">~69 %</p>
+          <p>Quien gana el descanso, gana el partido (Local 68 %, Visitante 69 %). El empate solo se mantiene 24 %.</p>
+        </div>
+        <div class="reading no" style="margin-top:14px;">
+          <span class="label">Lo que no concluye</span>
+          <p>Muestra el resultado, no la probabilidad por marcador ni el margen de goles.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Gráfico 3 -->
+  <section class="slide">
+    <div class="kicker">Gráfico 3</div>
+    <div class="grid">
+      <div class="figure-col">
+        <img src="remontadas_por_equipo.png" alt="Porcentaje de remontadas por equipo">
+        <div class="caption">Top 15 equipos: % de remontadas a favor</div>
+      </div>
+      <div>
+        <h2>¿Qué equipos remontan más?</h2>
+        <div class="reading ok">
+          <span class="label">Lo que muestra</span>
+          <p class="num">13.5 %</p>
+          <p>Fulham remontó más: 5 de 37 partidos. La remontada es un evento <strong>poco frecuente</strong>.</p>
+        </div>
+        <div class="reading no" style="margin-top:14px;">
+          <span class="label">Lo que no concluye</span>
+          <p>Con 33–38 partidos por equipo, el % es ruidoso.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Modelo: y y X -->
+  <section class="slide">
+    <div class="kicker">Modelo · 1</div>
+    <h2>Objetivo y predictores</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>y (objetivo)</h3>
+        <p>El <strong>resultado final</strong> <code>res_ft</code> desde la perspectiva del local: <code>L</code> gana local, <code>E</code> empate, <code>V</code> gana visitante.</p>
+      </div>
+      <div class="card">
+        <h3>X (predictores)</h3>
+        <p><code>ht_g1</code>, <code>ht_g2</code> — goles de local y visitante al descanso. Toda la info disponible al descanso.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Lo que se deja fuera (filtración)</h3>
+      <ul>
+        <li><code>ft_g1</code>, <code>ft_g2</code>, <code>res_ft</code> → la respuesta con otro nombre.</li>
+        <li><code>res_ht</code> → no existe al predecir (se deriva del marcador).</li>
+        <li><code>team1/team2</code>, <code>date</code>, <code>round</code> → no aportan a la pregunta.</li>
+      </ul>
+    </div>
+    <div class="reading ok">
+      <span class="label">Modelo</span>
+      <p>Regresión logística multinomial · 364 partidos con ht registrado.</p>
+    </div>
+  </section>
+
+  <!-- 9. Modelo: split y baseline -->
+  <section class="slide">
+    <div class="kicker">Modelo · 2</div>
+    <h2>Separación y baselines</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Train / test</h3>
+        <ul>
+          <li>75 / 25 <strong>estratificado</strong> (conserva la proporción L/E/V).</li>
+          <li><code>random_state=42</code> → reproducible.</li>
+          <li><strong>273</strong> train · <strong>91</strong> test.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Baselines (modelos simple)</h3>
+        <ul>
+          <li><strong>Clase mayoritaria</strong>: siempre predice "gana Local", sin mirar nada → acierta <strong>0.429</strong> (porque el 42.9 % de los partidos lo gana el local).</li>
+          <li><strong>"El resultado no cambia"</strong>: asume que el resultado del descanso se mantiene al final (ft = ht) → acierta <strong>0.571</strong>.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="reading no">
+      <span class="label">A tener en cuenta</span>
+      <p>El baseline "no cambia" ya acierta 57 %: superarlo es el verdadero reto.</p>
+    </div>
+  </section>
+
+  <!-- 10. Modelo: métricas -->
+  <section class="slide">
+    <div class="kicker">Modelo · 3</div>
+    <h2>Resultado en prueba</h2>
+    <div class="grid">
+      <div>
+        <table>
+          <tr><th>Modelo</th><th>Accuracy</th></tr>
+          <tr><td>Clase mayoritaria (Local)</td><td class="metric">0.429</td></tr>
+          <tr><td>Resultado no cambia (ft = ht)</td><td class="metric">0.571</td></tr>
+          <tr><td>Regresión logística</td><td class="metric win">0.648</td></tr>
+        </table>
+        <div class="reading ok" style="margin-top:14px;">
+          <span class="label">Lo que muestra</span>
+          <p>Gana a ambos baselines. Train 0.590 / test 0.648 → <strong>sin sobreajuste</strong>.</p>
+        </div>
+        <div class="reading no" style="margin-top:14px;">
+          <span class="label">Cuidado</span>
+          <p>Recall: Local <strong>0.85</strong> · Visitante <strong>0.79</strong> · Empate <strong>0.00</strong> (nunca lo predice).</p>
+        </div>
+      </div>
+      <div class="figure-col">
+        <img src="matriz_confusion_modelo.png" alt="Matriz de confusión del modelo">
+        <div class="caption">Matriz de confusión del modelo (test)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Modelo: probabilidades -->
+  <section class="slide">
+    <div class="kicker">Modelo · 4</div>
+    <h2>Probabilidades por marcador al descanso</h2>
+    <div class="grid">
+      <div class="figure-col">
+        <img src="probabilidades_marcador_ht.png" alt="Probabilidad de resultado final según marcador al descanso">
+        <div class="caption">Probabilidad de resultado final según marcador ht</div>
+      </div>
+      <div>
+        <div class="reading ok">
+          <span class="label">Si ganas el descanso</span>
+          <p><strong>1-0</strong> → ganas 62 % · <strong>2-0</strong> → 82 % · <strong>3-0</strong> → 92 %</p>
+        </div>
+        <div class="reading no" style="margin-top:14px;">
+          <span class="label">Si empiezas perdiendo</span>
+          <p>Perdiendo <strong>0-1</strong>: remontas 16 % · empate 22 % · pierdes 62 %. Con <strong>0-2</strong>, remontas 6 % y pierdes 79 %.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. Conclusión -->
+  <section class="slide">
+    <div class="kicker">Cierre</div>
+    <h2>Qué concluimos y qué no</h2>
+    <div class="cols">
+      <div class="card">
+        <h3 class="win">Lo que sostiene</h3>
+        <ul>
+          <li>El ht da señal fuerte: 0.648 supera al nulo (0.429) y al "no cambia" (0.571).</li>
+          <li>A más ventaja al descanso, victoria más segura.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="bad">Lo que no podemos decir</h3>
+        <ul>
+          <li>Ganar el ht no garantiza ganar: ~1 de cada 3 líderes no gana.</li>
+          <li>Nunca predice empates (recall 0.00).</li>
+          <li>Solo goles y resultado: sin xG ni posesión; una temporada; ~16 sin ht.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted">Cifras de <code>notebooks/02_analisis_dinamica_ht_vs_ft.ipynb</code> y <code>04_modelo_prediccion.ipynb</code>.</p>
+  </section>
+
+</div>
+
+<footer>
+  <button class="nav-btn" id="prev">◀ Anterior</button>
+  <div class="hint">Usa las flechas ← → del teclado para navegar</div>
+  <button class="nav-btn" id="next">Siguiente ▶</button>
+</footer>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const cur = document.getElementById('cur');
+  const total = document.getElementById('total');
+  let i = 0;
+  total.textContent = slides.length;
+
+  function show(n) {
+    i = (n + slides.length) % slides.length;
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    cur.textContent = i + 1;
+  }
+
+  document.getElementById('next').addEventListener('click', () => show(i + 1));
+  document.getElementById('prev').addEventListener('click', () => show(i - 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') show(i + 1);
+    if (e.key === 'ArrowLeft') show(i - 1);
+  });
+</script>
+</body>
+</html>
